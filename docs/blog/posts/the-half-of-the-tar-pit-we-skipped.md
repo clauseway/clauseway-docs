@@ -10,7 +10,7 @@ Programming is irreducibly difficult. Fred Brooks diagnosed it as such four deca
 
 <!-- more -->
 
-I think the reason is simpler than we want to admit: we just don't want to. And why would we? We know the problems we have, and even when the solutions are contrived, we know how to apply them. The patchwork of tools we use fights itself, but there is a path through that is just wide enough to be usable, and usable and well-trodden is good enough. Who is going to budget an experiment with a new approach when the old one has served for so many years? This isn't sloppiness, malice, human nature or original sin. Every intelligence works within a context, and solutions are only perfect if you imagine perfect conditions for them.
+I think the reason is simpler than we want to admit: we just want it this way. And why wouldn't we? We know the problems we have, and even when the solutions are contrived, we know how to apply them. The patchwork of tools we use fights itself, but there is a path through that is just wide enough to be usable, and usable and well-trodden is good enough. Who is going to budget an experiment with a new approach when the old one has served for so many years? This isn't sloppiness, malice, human nature or original sin. Every intelligence works within a context, and solutions are only perfect if you imagine perfect conditions for them.
 
 ## What changes
 
@@ -82,11 +82,11 @@ There is no `findByCopy` and no `findByMember`. You pick a direction by deciding
 ```java
 // Who holds copy 1?
 Unifiable<Integer> who = lvar();
-rules.activeLoan(lvar(), lval(1), who, lvar()).solve(who);
+Query.of(rules.activeLoan(lvar(), lval(1), who, lvar())).solve(who);
 
 // Which copies does member 100 hold?
 Unifiable<Integer> what = lvar();
-rules.activeLoan(lvar(), what, lval(100), lvar()).solve(what);
+Query.of(rules.activeLoan(lvar(), what, lval(100), lvar())).solve(what);
 ```
 
 One more layer. The invariant "a copy on loan can't be lent again" isn't a check inside a method; it's a relation built by negating the previous one — derived from derived, with the same rule applying all the way up:
