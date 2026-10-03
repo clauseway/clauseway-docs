@@ -10,10 +10,10 @@ pinned, reproducible reads.
 
 | Part | What it is |
 | --- | --- |
-| [**functional**](https://github.com/tomasz-gac/functional) | The substrate: fibers, fair schedulers, continuations — the machinery that keeps relational search complete and debuggable. |
-| [**logic**](https://github.com/tomasz-gac/logic) | The engine: unification, constraint stores (finite domains, disequality, nogoods), tabling with constraint-aware answer caching, weighted inference. |
-| [**pldb**](https://github.com/tomasz-gac/pldb) | The data boundary: relations backed by in-memory or SQL sources, constraint pushdown into WHERE clauses, transactions that certify their reads. |
-| [**library**](https://github.com/tomasz-gac/library-test) | The worked example: a lending-library domain built entirely from rules — policies as relations, denials as their complement. |
+| [**functional**](https://github.com/clauseway/functional) | The substrate: fibers, fair schedulers, continuations — the machinery that keeps relational search complete and debuggable. |
+| [**logic**](https://github.com/clauseway/logic) | The engine: unification, constraint stores (finite domains, disequality, nogoods), tabling with constraint-aware answer caching, weighted inference. |
+| [**pldb**](https://github.com/clauseway/pldb) | The data boundary: relations backed by in-memory or SQL sources, constraint pushdown into WHERE clauses, transactions that certify their reads. |
+| [**library**](https://github.com/clauseway/library-test) | The worked example: a lending-library domain built entirely from rules — policies as relations, denials as their complement. |
 
 ## Why
 

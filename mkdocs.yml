@@ -1,8 +1,8 @@
 site_name: Clauseway
 site_description: A logic programming stack for real problems — relations, constraints and tabling over real data.
 site_url: https://clauseway.org/
-repo_url: https://github.com/tomasz-gac/logic
-repo_name: tomasz-gac/logic
+repo_url: https://github.com/clauseway/logic
+repo_name: clauseway/logic
 
 theme:
   name: material
