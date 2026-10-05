@@ -8,6 +8,8 @@ categories:
 
 If you come from the imperative world, you are probably sceptical about the premise of this library. Saying what is true about the result and expecting the engine to work it out sounds like intelligence, and these days we associate intelligence with LLMs, which take warehouses of GPUs to run. But logic programming — relational programming, if you prefer the name that stresses what it works on — is much older, and used to run on hardware that your backend server puts to shame. There is nothing clever in the engine. It is closer to a Sudoku solver than to a chatbot: your rules define a space of possible answers, and it walks that space methodically — try, record, undo, try the next — and hands back everything that holds. Unlike a chess engine, it isn't looking for the best answer; it's looking for all of them. A search space for chess is enormous and a lot of engineering goes into compressing it. The invoices and shipment legs you write are much simpler, so a small library can manage. This article is an outline of how it does that — how your declarations become a search — and stops before the question of how it knows when the search is done, which deserves its own.
 
+<!-- more -->
+
 ## Functions vs relations
 
 A function is the basic building block of almost every program: a named recipe that turns arguments into a return value. Functions have a direction — from inputs to an output. They are the how of your program, and writing without them seems impossible. It isn't, quite. The how still exists in relational programming; it has moved into the engine, written once, and what's left in your code is what holds.
@@ -63,7 +65,7 @@ Literal route(Unifiable<String> from, Unifiable<String> to) {
 }
 ```
 
-Read it as the requirement reads, and ask it in any direction: where can Toruń reach, what can reach Lisbon, the whole table.
+Read it as the requirement reads, and ask it in any direction: where can Warsaw reach, what can reach Lisbon, the whole table.
 
 It looks like a how — recursion in a function is a how, a call stack hiding in a keyword. Here it's a definition by induction: `route` is the smallest relation containing every leg and closed under leg-then-route. Write it as leg-then-route, route-then-leg or route-then-route and you get the same relation; only the engine's effort changes. In classic Prolog, a definition like this over data with cycles never finishes. In Clauseway, every named relation remembers what its calls have already produced, so it does — and gives each answer once. How that works is its own article.
 
@@ -73,7 +75,7 @@ Everything so far has been stating. Asking is the same thing with blanks in it: 
 
 ```java
 Unifiable<String> hub = lvar();
-Query.of(route(lval("Toruń"), hub)).solve(hub);   // everywhere Toruń reaches
+Query.of(route(lval("Warsaw"), hub)).solve(hub);   // everywhere Warsaw reaches
 Query.of(route(hub, lval("Lisbon"))).solve(hub);  // everything that reaches Lisbon
 ```
 
@@ -83,6 +85,6 @@ Query.of(route(hub, lval("Lisbon"))).solve(hub);  // everything that reaches Lis
 
 If I've done my job so far, you may be asking: this is all pretty basic, so where's the magic? There isn't any in the engine, as promised. Every invariant you've seen is obvious in the small — `x = y`, a sum, a leg followed by a route. The magic, such as it is, is in what they do together. Goals compose by connectives, and they compose by nesting: a relation refers to other relations and, as in the last section, to itself. The answers are the closure of all of that at once, and closure is the thing no one can hold in their head. Each Sudoku constraint is trivial; the solved grid isn't. At some point you lose track of what implies what, and at that point the engine takes over and hands you answers that look as though intelligence produced them. That is the promise of logic programming: state the invariants, and the answers follow.
 
-It is also where the cost lives, and I'd rather say so here than have you find out. When an answer is wrong, you can't step through it the way you'd step through a loop, because there was no loop. What you can do is watch the engine work: it will narrate the search for you — every rule as it is tried, succeeds or fails, in order — and reading that narration is a different skill from reading a stack trace. When an answer is slow, you are back to thinking about the how: a domain you should have declared, an index you should have asked for, a rule written in a shape the engine takes the long way round. Memoization and propagation remove most of that burden, the optimizer removes some more, and what's left is the residue that no declarative system has quite eliminated. It's smaller than it used to be. It isn't zero.
+It is also where the cost lives, and I'd rather say so here than have you find out. When an answer is wrong, you can't step through it the way you'd step through a loop, because there was no loop. What you can do is watch the engine work: it will narrate the search for you — every rule as it is tried, succeeds or fails, in order — and reading that narration is a different skill from reading a stack trace. When an answer is slow, you are back to thinking about the how: a domain you should have declared, an index you should have asked for, a rule written in a shape the engine takes the long way round. Memoization and propagation remove most of that burden, the optimizer removes some more, and what's left is the residue that no declarative system has quite eliminated. It's smaller than it used to be. It isn't zero. There are no silver bullets, after all.
 
 Thankfully, Clauseway is a library, not a paradigm you adopt end to end. When the residue outweighs the win for some piece of your system, write that piece's how yourself and keep the rest.
