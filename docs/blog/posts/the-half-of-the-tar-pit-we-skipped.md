@@ -16,7 +16,7 @@ I think the reason is simpler than we want to admit: we just want it this way. A
 
 When an electronics company ships a circuit board, or an engineering company builds a bridge, nobody expects the product to change after launch. Software is different, because bridges aren't trying to structure the companies that use them. Whenever the market forces an organization to change, the software that models its processes has to change with it. This is the biggest source of change in any software system, and change is its biggest cost.
 
-The modern way to reduce that cost is to contain it. It is the architecture's job to keep together the things that change together, and to stop change from spreading across system boundaries. Twenty years ago we invented the hexagon, which does exactly that: it keeps the business model in the center, builds stable walls around it, and forces technology out into adapters. The remaining question is what to do with the centerpiece.
+The modern way to reduce that cost is to contain the change. It is the architecture's job to keep together the things that change together, and to stop change from spreading across system boundaries. Twenty years ago we invented the hexagon, which does exactly that: it keeps the business model in the center, builds stable walls around it, and forces technology out into adapters. The remaining question is what to do with the centerpiece.
 
 ## The half we skipped
 
