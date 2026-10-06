@@ -4,7 +4,7 @@ categories:
   - essays
 ---
 
-# Nothing clever in the engine: relational programming for imperative programmers
+# Magic isn't clever - it's emergent: relational programming for imperative programmers
 
 If you come from the imperative world, you are probably sceptical about the premise of this library. Saying what is true about the result and expecting the engine to work it out sounds like intelligence, and these days we associate intelligence with LLMs, which take warehouses of GPUs to run. But logic programming — relational programming, if you prefer the name that stresses what it works on — is much older, and used to run on hardware that your backend server puts to shame. There is nothing clever in the engine. It is closer to a Sudoku solver than to a chatbot: your rules define a space of possible answers, and it walks that space methodically — try, record, undo, try the next — and hands back everything that holds. Unlike a chess engine, it isn't looking for the best answer; it's looking for all of them. A search space for chess is enormous and a lot of engineering goes into compressing it. The invoices and shipment legs you write are much simpler, so a small library can manage. This article is an outline of how it does that — how your declarations become a search — and stops before the question of how it knows when the search is done, which deserves its own.
 
