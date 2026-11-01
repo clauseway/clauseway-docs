@@ -1,6 +1,8 @@
 # Part 1: One declaration, two sources
 
-This is the first part of a tutorial on using Clauseway, over the cargo shipping domain the DDD community has discussed to death. By the end of it you will have declared one relation, filled it from memory and from a database, and asked it questions in both directions. You need Java and SQL; the two essays before this, on [why the stack exists](../blog/posts/the-half-of-the-tar-pit-we-skipped.md) and [how it works in broad strokes](../blog/posts/nothing-clever.md), explain the motivation, but nothing here depends on them. The place we'll start may seem backwards, because it's the engine's end, but every program needs its data to reason over, and Clauseway has a named way to do just that:
+This is the first part of a tutorial on using Clauseway, over the cargo shipping domain the DDD community has discussed to death. By the end of it you will have declared one relation, filled it from memory and from a database, and asked it questions in both directions. You need Java and SQL; the two essays before this, on [why the stack exists](../blog/posts/the-half-of-the-tar-pit-we-skipped.md) and [how it works in broad strokes](../blog/posts/nothing-clever.md), explain the motivation, but nothing here depends on them. The place we'll start may seem backwards, because it's the engine's end, but every program needs its data to reason over, and Clauseway has a named way to do just that.
+
+## Declaring a relation
 
 ```java
 static External<?> cargo(AnswerSource db, Unifiable<String> trackingId, Unifiable<String> origin) {
@@ -11,7 +13,9 @@ static External<?> cargo(AnswerSource db, Unifiable<String> trackingId, Unifiabl
 }
 ```
 
-This is what the hexagon's port looks like from inside of the engine. It declares a relation whose facts are owned `External`ly. The type of the storage is deliberately opaque, because it may be in-memory, or accessed via JDBC, and its arguments are wrapped in `Unifiable` because it treats knowns (inputs) and unknowns (outputs) uniformly. Let's look into how to provide facts:
+This is what the hexagon's port looks like from inside of the engine. It declares a relation whose facts are owned `External`ly. The type of the storage is deliberately opaque, because it may be in-memory, or accessed via JDBC, and its arguments are wrapped in `Unifiable` because it treats knowns (inputs) and unknowns (outputs) uniformly.
+
+## Providing facts
 
 ```java
 // Two cargos, as dddsample seeds them: ABC123 from Hong Kong, JKL567 from Hangzhou.
@@ -27,7 +31,9 @@ Several things to note here:
 - Every provided value is wrapped in an `lval`.
 - The `AnswerSource` argument to cargo is left as null. It is unused in fact statements, but cargo declaration requires it. This is the least of all the evils I considered and the alternatives cost heavily in ergonomics. I assure you that I share your hatred of nulls, so if you see any - it means that I mourn over their sites.
 
-`Unifiable` is an interface with two important implementors - `LVal` and `LVar`. The former is used to provide literal values, knowns, while the other is used to ask questions. Since facts are the knowns, we use `lval`s. Now, onto asking questions:
+`Unifiable` is an interface with two important implementors - `LVal` and `LVar`. The former is used to provide literal values, knowns, while the other is used to ask questions. Since facts are the knowns, we use `lval`s.
+
+## Asking questions
 
 ```java
 // Where does ABC123 come from? The tracking id is known, the origin is the unknown.
@@ -49,7 +55,9 @@ Query.of(cargo(db, trackingId, lval("CNHGH")))
         .collect(toList());                      // ["JKL567"]
 ```
 
-Here, the known is the location, `lval("CNHGH")`, and `trackingId` is unknown. This is what "relational" programming stands for - there is no direction in the model and it can be queried in any direction - just like SQL. At this point, you may want to actually use it over a database, so here it is, over Postgres:
+Here, the known is the location, `lval("CNHGH")`, and `trackingId` is unknown. This is what "relational" programming stands for - there is no direction in the model and it can be queried in any direction - just like SQL.
+
+## The same over Postgres
 
 ```java
 Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost/cargo", "cargo", "cargo");
@@ -60,7 +68,9 @@ try (CachingSqlFetch db = CachingSqlFetch.pinned("cargo", connection)) {
 }
 ```
 
-The catch is the things I skimmed over so far. Let's conjure back the original relation and discuss it in detail:
+## The strings attached
+
+These are the things I skimmed over so far. Let's conjure back the original relation and discuss it in detail:
 
 ```java
 static External<?> cargo(AnswerSource db, Unifiable<String> trackingId, Unifiable<String> origin) {
@@ -121,6 +131,8 @@ try (CachingSqlFetch db = CachingSqlFetch.pinned("routing", connection)
 ```
 
 Here, we use the `.withCodec(routeSpecification(null, lvar(), lvar(), lvar(), INSTANT.arg()))` to tell Clauseway to use `INSTANT.arg()` codec for the required column. The `lvar()` columns mean "use the default". The default is the driver's object as it comes, and nothing checks it against the type you declared: a column without a codec is not refused, it fails at the first typed use. 
+
+## What you wrote
 
 Look back at what you actually wrote: one declaration. It did not change when the facts moved from a list in memory to a table, and it did not change when the question turned around. It names the relation and its columns and says nothing about storage, direction or lookup. Everything that did change, the source, the codec, the index, was said beside it, to the source, never inside it.
 
