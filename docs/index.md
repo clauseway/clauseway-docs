@@ -8,12 +8,13 @@ pinned, reproducible reads.
 
 ## The stack
 
-| Part | What it is |
-| --- | --- |
-| [**functional**](https://github.com/clauseway/functional) | The substrate: fibers, fair schedulers, continuations — the machinery that keeps relational search complete and debuggable. |
-| [**logic**](https://github.com/clauseway/logic) | The engine: unification, constraint stores (finite domains, disequality, nogoods), tabling with constraint-aware answer caching, weighted inference. |
-| [**pldb**](https://github.com/clauseway/pldb) | The data boundary: relations backed by in-memory or SQL sources, constraint pushdown into WHERE clauses, transactions that certify their reads. |
-| [**library**](https://github.com/clauseway/library-test) | The worked example: a lending-library domain built entirely from rules — policies as relations, denials as their complement. |
+| Part                                                      | What it is                                                                                                                                           |
+|-----------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [**functional**](https://github.com/clauseway/functional) | The substrate: fibers, fair schedulers, continuations — the machinery that keeps relational search complete and debuggable.                          |
+| [**logic**](https://github.com/clauseway/logic)           | The engine: unification, constraint stores (finite domains, disequality, nogoods), tabling with constraint-aware answer caching, weighted inference. |
+| [**pldb**](https://github.com/clauseway/pldb)             | The data boundary: relations backed by in-memory or SQL sources, constraint pushdown into WHERE clauses, transactions that certify their reads.      |
+| [**library**](https://github.com/clauseway/library-test)  | The worked example: a lending-library domain built entirely from rules — policies as relations, denials as their complement.                         |
+| [**cargo**](https://github.com/clauseway/cargo)           | Eric Evans' DDD cargo shipping domain over the Clauseway stack.                                                                                      |
 
 ## Why
 
@@ -28,4 +29,6 @@ that lives in a real database. The full argument is the opening essay:
 
 - The [blog](blog/index.md) — development notes along the way, opening
   with the essay that explains why this stack exists.
+- The [tutorial](tutorial/index.md) — a walkthrough of the features,
+  over the cargo domain.
 - The repositories above — each part builds with plain Maven.
