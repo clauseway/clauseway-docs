@@ -6,6 +6,7 @@ repo_name: clauseway/logic
 
 theme:
   name: material
+  custom_dir: overrides
   features:
     - navigation.tabs
     - navigation.sections
@@ -23,6 +24,10 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Light mode
+
+extra:
+  analytics:
+    provider: custom
 
 plugins:
   - search
@@ -42,5 +47,8 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Tutorial:
+      - tutorial/index.md
+      - "Part 1: One declaration, two sources": tutorial/one-declaration-two-sources.md
   - Blog:
       - blog/index.md
