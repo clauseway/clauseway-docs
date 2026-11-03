@@ -193,4 +193,5 @@ is fair. A relation over a table is a table. The reason to declare it
 this way appears when the columns stop merely being read and start being
 reasoned over.
 
-We'll get there, but I'll need some runway. The next part introduces projection, negation and unification.
+We'll get there, but I'll need some runway. The next part introduces
+unification, derived relations and negation.

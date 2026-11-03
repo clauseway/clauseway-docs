@@ -52,3 +52,4 @@ nav:
   - Tutorial:
       - tutorial/index.md
       - "Part 1: One declaration, two sources": tutorial/one-declaration-two-sources.md
+      - "Part 2: Unification, negation, and ignoring columns": tutorial/unification-negation-ignoring-columns.md
