@@ -27,7 +27,9 @@ Query.of(first.unifies("Hello"))
         .collect(toList());              // ["Hello"]
 ```
 
-Multiple relations can be declared to hold together, in conjunction:
+What `Query.of` takes is called a goal: an invariant all answers must satisfy. 
+A unification is the simplest goal, and there are two ways to combine
+them into a bigger one. They can be declared to hold together, in conjunction:
 
 ``` java
 Unifiable<String> first = lvar();
@@ -109,9 +111,12 @@ static External<?> cargo(AnswerSource db, Unifiable<String> trackingId, Unifiabl
 }
 ```
 
-A literal over a stored relation is a goal like the ones above, and
-it means the disjunction of its rows: every row is one way for the
-relation to hold, and a row holds when each variable unifies with the
+`cargo` returns an `External`, and an `External` is a literal: a
+relation's name applied to arguments, which is what
+`Literal.relation(...).arg(...)` builds. A literal is a goal like the
+ones above, and over a stored relation it means the disjunction of
+its rows: every row is one way for the relation to hold, 
+and a row holds when each variable unifies with the
 value in its column. With the two cargos from Part 1 in the store,
 `cargo(db, trackingId, origin)` reads as
 
@@ -166,9 +171,11 @@ public static Literal<?> known(AnswerSource db, Unifiable<String> trackingId) {
 ```
 
 Here we're saying that `known` holds whenever `cargo` has a
-`trackingId`. We don't care about `origin`, so it is a fresh variable
-that nothing else mentions. You can use this relation the same way
-you'd use `cargo`:
+`trackingId`. The `.arg`s are the relation's arguments, and they are
+all a caller of `known` sees. The goal under `.solving` is its body,
+and a variable the body makes for itself stays inside. We don't care
+about `origin`, so it is a fresh variable that nothing else mentions.
+You can use this relation the same way you'd use `cargo`:
 
 ``` java
 // Which cargos are booked? Nothing is known, only the tracking id is asked for.
@@ -271,7 +278,7 @@ This compiles and produces the expected answer.
 
 ## Ignoring columns
 
-`known` is a one-line rule over `cargo`, and you may be wondering
+`known` is a one-line derived relation over `cargo`, and you may be wondering
 whether you need it at all. Use `cargo` directly under `exclude`, with
 the fresh variable for the origin, the way `known` spelled it:
 
@@ -293,9 +300,10 @@ negation `exclude(cargo(db, trackingId, lvar()))` reads as:
 not exist". There are a lot of origins like that: `USNYC`, `DEHAM`,
 and in fact every string except `CNHKG`, the one that actually sits
 next to `ABC123` in the row. Inside `known` the same variable was
-harmless, because a rule's head keeps only the columns it names and
-the `origin` never left the rule. Put the literal under `exclude` by
-itself and nothing drops the column.
+harmless, because a caller sees only the `.arg`s of a derived
+relation, and `origin` was not one of them: it never left the body.
+Put `cargo` under `exclude` by itself and every column is an
+argument, so nothing hides it.
 
 What you meant was "no row with this id, whatever its origin". The
 engine has a marker for exactly that, `ignored()`:
@@ -317,13 +325,13 @@ is why nothing in the sections above could show you the difference.
 
 So `ignored()` is a shortcut: it writes the one-line derived relation
 for you, at the place you use the literal, and that is all it is.
-Inside a derived relation you do not need it. The rule's head keeps
-only the columns it names, so a fresh `lvar()` for a column the body
-does not care about is dropped by the head, and `known` is right as
-it was written. Where you need the shortcut is a stored literal
-standing under `exclude` with no head above it to drop the column,
-as in the example above. Spell that column `ignored()`, or write the
-rule.
+Inside a derived relation you do not need it. Only the `.arg`s are
+visible from outside, so a fresh `lvar()` for a column the body does
+not care about stays inside, and `known` is right as it was written.
+Where you need the shortcut is a stored literal standing under
+`exclude` on its own, with no derived relation around it to keep the
+column inside, as in the example above. Spell that column
+`ignored()`, or write the relation.
 
 ## Where this leads
 
