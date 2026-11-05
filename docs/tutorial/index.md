@@ -6,3 +6,4 @@ published artifacts.
 
 1. [One declaration, two sources](one-declaration-two-sources.md)
 2. [Unification, negation, and ignoring columns](unification-negation-ignoring-columns.md)
+3. [One rule, both directions](one-rule-both-directions.md)

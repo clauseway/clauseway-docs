@@ -17,7 +17,7 @@ We start smaller than that, with two variables and a string.
 Before we build anything more impressive, we need to step back and
 learn some basics. First, we need to learn how to say that things are
 equal, and in relational programming the name for that is
-unification. This is how a variable gets told a value:
+unification. This is how a variable value gets deduced:
 
 ``` java
 Unifiable<String> first = lvar();
@@ -26,7 +26,6 @@ Query.of(first.unifies("Hello"))
         .map(row -> row.get(first))
         .collect(toList());              // ["Hello"]
 ```
-
 What `Query.of` takes is called a goal: an invariant all answers must satisfy. 
 A unification is the simplest goal, and there are two ways to combine
 them into a bigger one. They can be declared to hold together, in conjunction:
@@ -154,6 +153,12 @@ answer you get is one you could derive this way. It is not how the
 engine computes it. A thousand rows and a conjunction do not become a
 thousand branches, and when the cost of a question matters we will
 come back to why. For now, the meaning is all you need.
+
+Notice what this buys you: one language for describing data and computations 
+over it. You no longer have to fetch data with SQL, map it into Java objects, 
+and only then express the computation. Both are described uniformly, which 
+opens up interesting possibilities, including choosing where the work happens: 
+inside the JVM or in the database.
 
 ## Derived relations
 
