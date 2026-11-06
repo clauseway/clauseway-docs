@@ -152,8 +152,9 @@ the body. The second `leg` stands under `exclude` with no head above it to drop 
 there they are `ignored()`, like we previously discussed.
 
 Like in part 2, there are nuances to negation that we won't be discussing for now. 
-You may be wondering why we're adding `1` to index instead of saying that `index < next`. We'll
-get to it in part 4 when talking about conditional answers.
+You may be wondering why we're adding `1` to index instead of saying that `index < next`.
+This assumes that there are no gaps in the itinerary and wouldn't work for non-discrete domains
+like time. We'll get to it in part 4 when talking about conditional answers.
 
 ## The whole rule
 
@@ -239,8 +240,8 @@ Here we're asking which step is `UNLOAD` at `USNYC`. Or leave everything free to
 // the whole plan
 Query.of(plannedHandling(db, lval("ABC123"), step, type, location))
         .select(step, type, location).stream()
+        .sorted(Comparator.comparing(row -> row.get(step)))
         .map(row -> row.get(step) + " " + row.get(type) + "@" + row.get(location))
-        .sorted()
         .collect(toList());
 // [0 RECEIVE@CNHKG, 1 LOAD@CNHKG, 2 UNLOAD@USNYC,
 //  3 LOAD@USNYC, 4 UNLOAD@FIHEL, 5 CLAIM@FIHEL]
@@ -253,9 +254,9 @@ Query.of(plannedHandling(db, lval("JKL567"), step, lval(HandlingType.UNLOAD), lv
         .map(row -> row.get(step))
         .collect(toList());                            // [] (No)
 ```
-What comes after this event?
+What is the next step of the plan?
 ``` java
-// what comes after an event: backwards to its step, forwards to the next
+// what is the next step of the plan: backwards to its step, forwards to the next
 Unifiable<Integer> next = lvar();
 Query.of(plannedHandling(db, lval("ABC123"), step, lval(HandlingType.UNLOAD), lval("USNYC"))
                 .and(Ints.addo(step, lval(1), next))
