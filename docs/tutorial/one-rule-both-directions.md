@@ -35,8 +35,7 @@ static External<?> leg(AnswerSource db, Unifiable<String> trackingId, Unifiable<
 ## A handling event
 For a real system, recording a plan is rarely enough. People make mistakes, cargos get misdirected,
 so we also need to record the actual history of a voyage that is sent to us by the carriers. Keeping
-track of how the actual events correspond with a plan is an important feature of our application. This
-is also essential state of our application, so we store it:
+track of how the actual events correspond with a plan is an important feature of our application. 
 
 ``` java
 public enum HandlingType {
@@ -58,7 +57,7 @@ static External<?> handlingEvent(AnswerSource db, Unifiable<String> trackingId, 
 }
 ```
 ## The plan, case by case
-Now, in order to construct a rule that shows the correspondence 
+In order to construct a rule that shows the correspondence 
 between `leg`s and `event`s, let's make a few observations. Let's look
 at `HandlingType`:
 
@@ -74,9 +73,8 @@ With this relation we're interested in `trackingId`, `type`, `location` and the 
 static Literal<?> plannedHandling(AnswerSource db, Unifiable<String> trackingId, Unifiable<Integer> step,
         Unifiable<HandlingType> type, Unifiable<String> location)
 ```
-Now, I'll break down the specification separately, step by step, and we'll put it back together at the end.
+Now, I'll break down the specification step by step, and we'll put it back together at the end.
 
-Let's try to encode the logic behind the `RECEIVE` event:
 ``` java
 // In order to work with `cargo` at all, we first need to have it, which is the `RECEIVE` event.
 type.unifies(HandlingType.RECEIVE)
@@ -86,7 +84,7 @@ type.unifies(HandlingType.RECEIVE)
 In this case, we know that the `type` is `RECEIVE` and that the `step` is `0`. Similarly,
 this also applies to the `leg`'s `index`. The only surprise you may be seeing is the naked `lvar()`
 for a column we don't need. This fragment is a part of the whole relation we'll show at the end,
-and a column no `.arg` names stays inside its body, as in Part 2. Onto the next case:
+and a column no `.arg` names stays inside its body, as in Part 2.
 ``` java
 // Whenever we start a `leg`, we need to `LOAD` the `cargo` onto the carrier.
 Unifiable<Integer> index = lvar();
@@ -96,14 +94,12 @@ type.unifies(HandlingType.LOAD)
             .and(Ints.multo(index, lval(2), twice))
             .and(Ints.addo(twice, lval(1), step))
 ```
-Here I snuck in relational operators over integers, so let me explain. The `step` is
-the step of the plan, but `leg`s have their own `index`. Each `leg` starts with `LOAD` and ends
-with `UNLOAD`. Since we start with `RECEIVE` as `step` `0`, the relationship between them for the
-`LOAD` event is: `step=2*index+1`. `Ints.multo` and `Ints.addo` are arithmetic relations
-over integers. We need two helper variables `index` and `twice` to express
-this equation. The `o` at the end of their names is a convention that denotes that 
-they are relational: they work regardless of whether you ask about `index` or `step` - 
-the engine will deduce the missing one if there's enough information. The similar case holds for `UNLOAD`:
+We started with `RECEIVE` as step `0` and here we have started some `leg`. Each `leg` opens
+with `LOAD` and closes with `UNLOAD`, so there are two steps for every `leg` `index`.
+Leg `index` owns steps `2*index+1` (`LOAD`) and `2*index+2` (`UNLOAD`). `Ints.addo` and 
+`Ints.multo` express that relationship. They are relational arithmetic operators over integers,
+and by convention their names end with `o` to signify that the engine can compute `index` given
+`step`, or `step` given `index`. A similar case holds for `UNLOAD`:
 ``` java
 // Whenever a `leg` ends, the `cargo` needs to be `UNLOAD`ed.
 Unifiable<Integer> index = lvar();
