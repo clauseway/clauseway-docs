@@ -1,12 +1,16 @@
 # Part 4: Any value, some value
 
 So far in this tutorial we've been working our way up to expressing a useful derived rule that
-we could query in multiple directions. This worked fine for the purpose of illustration, but
-when solving real problems you will oftentimes be confused and try things that fail. So far
-our examples didn't teach how to read the engine output in those cases, so today we're going
-to break something. By the end of the article, you will know how to read the engine's symbolic
-output, how it produces answers and when it will not. Finally, you will learn about quantifiers,
-how to scope them and how they influence negation. Buckle up, because it's going to be a deep dive.
+we could query in multiple directions. This worked fine for the purpose of gradual exposition,
+but the relational and imperative worlds don't glue together quite so seamlessly. Today we dive
+deeper into the world of relations, where answers aren't just values to compute with but
+expressions of knowledge we have to reason over. The gap shows most clearly when something
+fails, and when solving real problems you will often try things that fail. Our examples so far
+didn't teach how to read the engine's output in those cases, so today we're going to break
+something. By the end of the article, you will know how to read the engine's symbolic output,
+how it produces answers and when it will not. You will learn about quantifiers, how to scope
+them and how they influence negation. And you will see why the order in which the engine checks
+things is not yours to rely on.
 
 ## Why not `<`?
 The last part left us with a question - why did we choose to add `1` instead of using `<`?
