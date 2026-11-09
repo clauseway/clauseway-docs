@@ -47,7 +47,8 @@ Query.of(lastIndexLss(db, lval("ABC123"), index))
         // (<index>: {1}) : ∃<next>. lss({1}, <next>)
         // — a reading into Java needs a row that holds outright; select the name or read it raw
 ```
-This is bad, why can't we get an answer? Let's print the row instead:
+But the engine did produce answers. What failed was our attempt to read one as an ordinary Java value. 
+Let's print the rows instead.
 ``` java
 // the lss version: print the rows instead of reading them
 Query.of(lastIndexLss(db, lval("ABC123"), index))
@@ -211,27 +212,29 @@ Query.of(leg(db, lval("ABC123"), index, lvar(), lvar(), lvar())
 // (<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>) ∧ lss({0}, <next>))
 // (<index>: {1}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>) ∧ lss({1}, <next>))
 ```
-Two answers again, but let's see if they hold. `index` is `0` given that there is
-no `leg` whose index `next` is greater than `0`. `next` here is an index of a `leg`
-with `trackingId=ABC123`, so it is `0` or `1`. Is either greater than `0`? Yes, `1` is -
-so there is such a `leg` and the answer does not hold. The answer `(<index>: {1})`
-holds if no `leg` index is greater than `1`. None is - so it holds. This looks like
-the right question, so why wasn't the engine able to prove it?
+Two answers again. At first glance, this looks like the question we meant to ask: there is no `leg` 
+with an index greater than `index`. Since `ABC123` has legs at `0` and `1`, we'd expect `0` to fail 
+and `1` to succeed. So why did both survive?
 
-Because we cheated a little. Look at the row again: `∃<next>.` lives in front
-of `¬`, not behind it. We read `next` as "an index of a `leg`" - we let `leg`
-provide its values. But `next` is a variable of the whole `Query`, and inside
-`exclude` the engine does not let `leg` provide values - it takes the complement.
-`next` ranges over every value that is *not* an index of a `leg` greater than
-`index`. For `index = 0` that is every integer but `1`; for `index = 1` it is every
-integer. Moving `lss` inside changed *which* complement `next` ranges over, but
-`next` still ranges over a complement, the complement is still almost everything,
-so *some* `next` always exists and both answers survive. The engine will not go looking
-for a `next` inside that complement for us, so it hands it back as a condition naming `next`.
+Look carefully at where `∃<next>` appears. It is outside the `¬`. The answer for `index = 0` doesn't 
+say "there is no later leg". It says "there is some `next` for which it is not true that a `leg` exists at 
+`next` and `next` is greater than `0`".
 
-So - are we doomed? Not quite. The problem is that `next` exists outside
-the exclusion at all: it is a variable of our question. We need a question 
-that has no `next` in it and still asks about the legs after `index`.
+That's a very different statement. Take `next = 0`. There is a leg at `0`, but `0` is not greater than `0`, 
+so the conjunction is false and its exclusion holds. Or take `next = 100`: there is no `leg` there, so 
+the exclusion holds again. The same reasoning works for `index = 1`. Both answers have conditions that 
+can be satisfied, even though the engine hasn't settled them.
+
+What went wrong? We moved `lss` inside the exclusion, but `next` is still a variable of the whole `Query`. 
+The engine is constraining which values `next` may take, not asking `leg` to find all later indices and 
+then denying their existence. Inside `exclude`, the lookup cannot provide values for `next`: its 
+complement becomes a condition on that variable.
+
+We need to ask whether a later `leg` exists first, with `next` belonging only to that question. Then 
+we can `exclude` the answer to the whole question, rather than `exclude` a condition on an exposed 
+variable.
+
+That's what a derived relation lets us do.
 
 ## A literal is a question of its own
 
@@ -274,10 +277,10 @@ about `index`. Now `exclude(hasLaterLeg(...))` takes the complement of *that*: e
 is who provides the values. Nothing outside the `exclude` provided `next`, so its
 complement came back as a condition. `index` is provided by the `leg` lookup in
 our query - it is `0` or `1` - so the complement is checked against a value and
-settled: `0` is less than `1`, out; `1` is not less than either, in. The natural
-reading we used above - letting `leg` provide `next` - was right all along. It just
-has to happen inside a literal, where `next` is a local, before the complement is
-taken.
+settled: `0` is less than `1`, out; `1` is not less than either, in. The reading
+we wanted above - no `leg` with an index greater than `index`, with `leg` providing `next` -
+was right all along. It just has to happen inside a literal, where `next` is a local, before
+the complement is taken.
 
 One thing you can now explain that Part 2 only asserted. There we wrote
 `exclude(leg(db, trackingId, next, ignored(), ignored(), ignored()))` and said that an ignored
@@ -317,11 +320,13 @@ static Literal<?> lastIndex(AnswerSource db, Unifiable<String> trackingId, Unifi
                     .and(exclude(leg(db, trackingId, next, ignored(), ignored(), ignored()))));
 }
 ```
-The first `leg` provides a value for `index` and `next` has its value from `addo` - 
-`exclude` simply filters it. The reason to write it this way is artificial - I need to
-present ideas in this tutorial in a way that you can digest them - one at a time. This 
-requires me to choose examples that illustrate the points I'm trying to get across. 
-For example, I promised to circle back to the answer that was inexplicably simplified:
+The first `leg` provides `index`, `addo` determines `next`, and `exclude` checks whether a `leg` 
+exists at that index. There is no unresolved `next` left for the engine to reason about.
+
+We used this definition in Part 3 because it let us introduce one idea at a time. But it also 
+avoided a problem that is worth understanding: the engine does not always manage to settle 
+every condition, even when the information needed to do so is available. I promised to circle 
+back to the answer that was inexplicably simplified:
 ``` java
 Unifiable<Integer> index = lvar("index");
 Unifiable<Integer> next = lvar("next");
@@ -333,14 +338,12 @@ Query.of(leg(db, lval("ABC123"), index, lvar(), lvar(), lvar())
 // (<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>)) ∧ lss({0}, <next>)
 // (<index>: {1}) : ∃<next>. lss({1}, <next>)
 ```
-The engine settled the condition `¬(leg[trackingId,index]@tabled({ABC123},<next>))` for
-`(<index>: {1})` on its own: once `lss` had pushed `next` above `1`, no `leg` had such an index.
-Our current rules never say why.
-That is because the logical rules I presented allow you to reason about what you express, but not
-how the engine reasons about it. The sole reason to use Clauseway is that you do not want to know
-how the engine works, and how exactly it produces answers. If you wanted to think about it, you 
-would just write the algorithm yourself. This is why the engine never promises the order in which
-it will execute your statements, and yet some orders happen to produce the right answer:
+For `index = 1`, by the time the engine checked the exclusion, `lss` had already pushed `next` 
+above `1`, and no `leg` of `ABC123` has such an index, so the lookup could match nothing and the 
+exclusion was settled. For `index = 0`, `next` above `0` still leaves the leg at `1`, so the 
+condition stayed. Nothing in the rules I gave you says this. They tell you what you expressed, 
+not how far the engine gets with it, and how far it gets depends on order. Take the query from 
+"Still a variable of the question" and swap the two conjuncts inside `exclude`:
 ``` java
 Unifiable<Integer> index = lvar("index");
 Unifiable<Integer> next = lvar("next");
@@ -352,16 +355,29 @@ Query.of(leg(db, lval("ABC123"), index, lvar(), lvar(), lvar())
 // (<index>: {1})
 // (<index>: {0}) : ∃<next>. ¬(lss({0}, <next>) ∧ leg[trackingId,index]@tabled({ABC123},<next>))
 ```
-Here we took the example from `Still a variable of the question` and we swapped the order
-of conjuncts inside `exclude`. This allowed the engine to find an unconditional answer for
-`index = 1` because of the algorithm it uses, while `index = 0` came back as conditional as
-before. The point is, that you shouldn't rely on it. That is because the ability of the engine
-to answer different questions about the same model makes any hand-picked order right for one
-question only. Similarly, if you ordered your model to make it run faster, it could run faster
-for a single query, which would make this paradigm less useful. This is why Clauseway has 
-pluggable schedulers and optimizers that are parameters of the `Query` and not of the model.
-This way they can figure out proper order and execution strategy for you. With the rules I
-gave you, they should work for all of them.
+This time the engine proves that `index = 1` holds outright, while `index = 0` still carries a condition. 
+We haven't changed the logical meaning of the conjunction, but we have changed how much the engine 
+managed to prove before returning its answers.
+
+This doesn't mean the earlier answers were wrong. A conditional answer describes what must still hold; 
+an unconditional one means the engine has already established it. Different execution orders can leave 
+different amounts of work unresolved.
+
+So why not just rearrange the statements until the engine produces the answers we want?
+
+Because the whole point of declaring a relation is that we can ask it different questions. An order 
+that helps the engine answer one question may be a poor choice for another. If we have to arrange 
+every rule around a particular execution strategy, we're back to writing algorithms instead of 
+describing the domain.
+
+This is why Clauseway has pluggable schedulers and optimizers, configured on the Query rather than 
+embedded in the model. The rule describes what must hold; the execution machinery decides how to 
+work toward an answer. That doesn't guarantee every condition will be settled, but it lets us improve 
+execution without changing the domain rule.
+
+And that's the important distinction between the two fixes we've seen: changing the order can change 
+how much the engine proves; changing the scope of a variable changes what question we asked. 
+`hasLaterLeg` fixes the question itself, rather than relying on a favorable execution order.
 
 ## Where this leads
 
