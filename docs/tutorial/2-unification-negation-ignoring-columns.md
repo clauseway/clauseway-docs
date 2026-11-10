@@ -4,7 +4,7 @@ Part 1 ended with a promise: declaring a relation pays off when its
 columns are reasoned over, not merely read. This part is the runway
 for that. By the end you will know what a query means, and you will
 have written a relation in terms of another, denied one, and seen
-the one way a denial goes quietly wrong.
+the one way a denial asks a different question than you meant.
 
 Nothing new is stored. The `cargo` relation and the two cargos from
 Part 1 are still there, and every example below asks them something.
@@ -288,27 +288,30 @@ whether you need it at all. Use `cargo` directly under `exclude`, with
 the fresh variable for the origin, the way `known` spelled it:
 
 ``` java
-Unifiable<String> trackingId = lvar();
+Unifiable<String> trackingId = lvar("trackingId"); // you can name lvars for a better output
 Query.of(trackingId.unifies("ABC123")
-            .and(exclude(cargo(db, trackingId, lvar()))))
+            .and(exclude(cargo(db, trackingId, lvar("origin")))))
         .select(trackingId).stream()
         .map(row -> row.get(trackingId))
-        .collect(toList());                      // ["ABC123"]
+        .collect(toList());
+        // java.lang.IllegalStateException: 
+        // holds only under ∃<origin>. ¬(cargo@7a5d012c({ABC123}, <origin>)), 
+        // about a name the select did not name: (<trackingId>: {ABC123}) : ∃<origin>. ¬(cargo@7a5d012c({ABC123}, <origin>)) 
+        // — a reading into Java needs a row that holds outright; select the name or read it raw
 ```
 
-The engine answers that `ABC123` is not booked. It is, and nothing
-failed, no error was raised. This is the silent kind of wrong, and it
-comes from asking a different question than you meant. A variable
-is something the engine tries to find a solution for, and under
-negation `exclude(cargo(db, trackingId, lvar()))` reads as:
-"there is some `origin` for which cargo with `trackingId=ABC123` does
-not exist". There are a lot of origins like that: `USNYC`, `DEHAM`,
-and in fact every string except `CNHKG`, the one that actually sits
-next to `ABC123` in the row. Inside `known` the same variable was
-harmless, because a caller sees only the `.arg`s of a derived
-relation, and `origin` was not one of them: it never left the body.
-Put `cargo` under `exclude` by itself and every column is an
-argument, so nothing hides it.
+This is a new kind of outcome - the engine produced an answer, 
+but refused to hand it to Java, because it holds only under a condition. 
+How to deal with this kind of situation is the subject of part 4 so for 
+now, I'll translate the answer for you: `trackingId` is `ABC123` if 
+there is some `origin` for which there is no `cargo` with `trackingId=ABC123`. 
+There are a lot of origins like that: `USNYC`, `DEHAM`, and in 
+fact every string except `CNHKG`, the one that actually sits next 
+to `ABC123` in the row. This tells us that the model specifies 
+something different from "I don't care about this column". It says: 
+"there is some value for which the row exists". The difference is
+visible here because it's `exclude`d - "there is some value for
+which the row doesn't exist".  
 
 What you meant was "no row with this id, whatever its origin". The
 engine has a marker for exactly that, `ignored()`:

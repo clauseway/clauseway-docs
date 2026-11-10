@@ -60,7 +60,7 @@ Query.of(lastIndexLss(db, lval("ABC123"), index))
         .select(index).stream()
         .forEach(System.out::println);
 // (<index>: {1}) : ∃<next>. lss({1}, <next>)
-// (<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>)) ∧ lss({0}, <next>)
+// (<index>: {0}) : ∃<next>. lss({0}, <next>) ∧ ¬(leg[trackingId,index]@tabled({ABC123},<next>))
 ```
 This looks wrong twice over. First, we didn't get a straight answer but a bunch of squiggles, and more
 than that - we got two answers, but there's only one last index. The good news is that this answer
@@ -170,12 +170,12 @@ Query.of(leg(db, lval("ABC123"), index, lvar(), lvar(), lvar())
         .and(exclude(leg(db, lval("ABC123"), next, ignored(), ignored(), ignored()))))
         .select(index).stream()
         .forEach(System.out::println);
-// (<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>)) ∧ lss({0}, <next>)
+// (<index>: {0}) : ∃<next>. lss({0}, <next>) ∧ ¬(leg[trackingId,index]@tabled({ABC123},<next>))
 // (<index>: {1}) : ∃<next>. lss({1}, <next>)
 ```
 Let's first look at the answer that looks obviously wrong:
 ```
-(<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>)) ∧ lss({0}, <next>)
+(<index>: {0}) : ∃<next>. lss({0}, <next>) ∧ ¬(leg[trackingId,index]@tabled({ABC123},<next>))
 ```
 `index` is `0`, given that there is *some* `next` that is greater than `0` and there 
 is no `leg` with index `next`. First - why do we even get a conditional answer? `next`
@@ -340,7 +340,7 @@ Query.of(leg(db, lval("ABC123"), index, lvar(), lvar(), lvar())
         .and(exclude(leg(db, lval("ABC123"), next, ignored(), ignored(), ignored()))))
         .select(index).stream()
         .forEach(System.out::println);
-// (<index>: {0}) : ∃<next>. ¬(leg[trackingId,index]@tabled({ABC123},<next>)) ∧ lss({0}, <next>)
+// (<index>: {0}) : ∃<next>. lss({0}, <next>) ∧ ¬(leg[trackingId,index]@tabled({ABC123},<next>))
 // (<index>: {1}) : ∃<next>. lss({1}, <next>)
 ```
 For `index = 1`, by the time the engine checked the exclusion, `lss` had already pushed `next` 
