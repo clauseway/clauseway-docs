@@ -329,9 +329,9 @@ The first `leg` provides `index`, `addo` determines `next`, and `exclude` checks
 exists at that index. There is no unresolved `next` left for the engine to reason about.
 
 We used this definition in Part 3 because it let us introduce one idea at a time. But it also 
-avoided a problem that is worth understanding: the engine does not always manage to settle 
-every condition, even when the information needed to do so is available. I promised to circle 
-back to the answer that was inexplicably simplified:
+kept us clear of something worth seeing once: when an answer carries a condition, how much of that 
+condition the engine has already settled is not fixed by the model. I promised to circle back to 
+the answer that was inexplicably simplified:
 ``` java
 Unifiable<Integer> index = lvar("index");
 Unifiable<Integer> next = lvar("next");
@@ -364,21 +364,13 @@ This time the engine proves that `index = 1` holds outright, while `index = 0` s
 We haven't changed the logical meaning of the conjunction, but we have changed how much the engine 
 managed to prove before returning its answers.
 
-This doesn't mean the earlier answers were wrong. A conditional answer describes what must still hold; 
-an unconditional one means the engine has already established it. Different execution orders can leave 
-different amounts of work unresolved.
-
-So why not just rearrange the statements until the engine produces the answers we want?
-
-Because the whole point of declaring a relation is that we can ask it different questions. An order 
-that helps the engine answer one question may be a poor choice for another. If we have to arrange 
-every rule around a particular execution strategy, we're back to writing algorithms instead of 
-describing the domain.
-
-This is why Clauseway has pluggable schedulers and optimizers, configured on the Query rather than 
-embedded in the model. The rule describes what must hold; the execution machinery decides how to 
-work toward an answer. That doesn't guarantee every condition will be settled, but it lets us improve 
-execution without changing the domain rule.
+Neither run was wrong. A conditional answer describes what must still hold; an unconditional one means 
+the engine has already established it; and which of the two you get for the same model depends on the 
+order the engine happened to check things in. That shape is not yours to engineer. Notice where every 
+condition that surprised us sat: on `next`, or on the three columns we left as `lvar()` - names we did 
+not select, holes in the question. Close the hole, by scoping the variable into a literal or by giving 
+it values to try, and the condition disappears in every order. Order does matter, for how much work 
+the engine does on the way to an answer, and that is a later part's subject.
 
 And that's the important distinction between the two fixes we've seen: changing the order can change 
 how much the engine proves; changing the scope of a variable changes what question we asked. 
