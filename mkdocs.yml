@@ -55,3 +55,4 @@ nav:
       - "Part 2: Unification, negation, and ignoring columns": tutorial/2-unification-negation-ignoring-columns.md
       - "Part 3: One rule, both directions": tutorial/3-one-rule-both-directions.md
       - "Part 4: Any value, some value": tutorial/4-any-value-some-value.md
+  - About: about.md
